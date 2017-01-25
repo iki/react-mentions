@@ -45,6 +45,18 @@ var _getDataProvider = function(data) {
 
 var KEY = { TAB : 9, RETURN : 13, ESC : 27, UP : 38, DOWN : 40 };
 
+var DEFAULT_PROPS = {
+  markup: '@[__display__](__id__)',
+  singleLine: false,
+  displayTransform: function(id, display, type) {
+    return display;
+  },
+  onKeyDown: () => null,
+  onSelect: () => null,
+  onBlur: () => null,
+  style: {},
+};
+
 var isComposing = false;
 
 const MentionsInput = React.createClass({
@@ -83,17 +95,7 @@ const MentionsInput = React.createClass({
   },
 
   getDefaultProps: function () {
-    return {
-      markup: "@[__display__](__id__)",
-      singleLine: false,
-      displayTransform: function(id, display, type) {
-        return display;
-      },
-      onKeyDown: () => null,
-      onSelect: () => null,
-      onBlur: () => null,
-      style: {}
-    };
+    return DEFAULT_PROPS;
   },
 
   getInitialState: function () {
