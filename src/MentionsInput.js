@@ -331,6 +331,7 @@ const MentionsInput = React.createClass({
 
     if(values(KEY).indexOf(ev.keyCode) >= 0) {
       ev.preventDefault();
+      ev.stopPropagation();
     }
 
     switch(ev.keyCode) {
