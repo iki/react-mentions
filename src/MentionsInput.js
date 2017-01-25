@@ -514,9 +514,10 @@ const MentionsInput = React.createClass({
 
   queryData: function(query, mentionDescriptor, querySequenceStart, querySequenceEnd, plainTextValue) {
     var provideData = _getDataProvider(mentionDescriptor.props.data);
-    var snycResult = provideData(query, this.updateSuggestions.bind(null, this._queryId, mentionDescriptor, query, querySequenceStart, querySequenceEnd, plainTextValue));
-    if(snycResult instanceof Array) {
-      this.updateSuggestions(this._queryId, mentionDescriptor, query, querySequenceStart, querySequenceEnd, plainTextValue, snycResult);
+    var syncResult = provideData(query, this.updateSuggestions.bind(null, this._queryId, mentionDescriptor, query, querySequenceStart, querySequenceEnd, plainTextValue));
+
+    if(syncResult instanceof Array) {
+      this.updateSuggestions(this._queryId, mentionDescriptor, query, querySequenceStart, querySequenceEnd, plainTextValue, syncResult);
     }
   },
 
