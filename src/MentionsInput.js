@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import Radium from './OptionalRadium';
 
 import keys from 'lodash/keys';
-import values from 'lodash/values';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
 
@@ -51,6 +50,14 @@ var isComposing = false;
 const MentionsInput = React.createClass({
 
   displayName: 'MentionsInput',
+
+  keyHandlers: {
+    [KEY.ESC]: c => c.clearSuggestions(),
+    [KEY.DOWN]: c => c.shiftFocus(+1),
+    [KEY.UP]: c => c.shiftFocus(-1),
+    [KEY.RETURN]: c => c.selectFocused(),
+    [KEY.TAB]: c => c.selectFocused(),
+  },
 
   propTypes: {
 
@@ -319,43 +326,20 @@ const MentionsInput = React.createClass({
   },
 
   handleKeyDown: function(ev) {
-    // do not intercept key events if the suggestions overlay is not shown
-    var suggestionsCount = utils.countSuggestions(this.state.suggestions);
+    if(ev.keyCode in this.keyHandlers) {
+      // do not intercept key events if the suggestions overlay is not shown
+      var suggestionsCount = utils.countSuggestions(this.state.suggestions);
+      var suggestionsComp = this.refs.suggestions;
 
-    var suggestionsComp = this.refs.suggestions;
-    if(suggestionsCount === 0 || !suggestionsComp) {
-      this.props.onKeyDown(ev);
+      if(suggestionsCount && suggestionsComp) {
+        ev.preventDefault();
+        ev.stopPropagation();
 
-      return;
-    }
-
-    if(values(KEY).indexOf(ev.keyCode) >= 0) {
-      ev.preventDefault();
-      ev.stopPropagation();
-    }
-
-    switch(ev.keyCode) {
-      case KEY.ESC: {
-        this.clearSuggestions();
-        return;
-      }
-      case KEY.DOWN: {
-        this.shiftFocus(+1);
-        return;
-      }
-      case KEY.UP: {
-        this.shiftFocus(-1);
-        return;
-      }
-      case KEY.RETURN: {
-        this.selectFocused();
-        return;
-      }
-      case KEY.TAB: {
-        this.selectFocused();
+        this.keyHandlers[ev.keyCode](this);
         return;
       }
     }
+    this.props.onKeyDown(ev);
   },
 
   shiftFocus: function(delta) {
