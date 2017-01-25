@@ -475,10 +475,7 @@ const MentionsInput = React.createClass({
 
   updateMentionsQueries: function(plainTextValue, caretPosition) {
     // Invalidate previous queries. Async results for previous queries will be neglected.
-    this._queryId++;
-    this.setState({
-      suggestions: {}
-    });
+    this.clearSuggestions()
 
     // If caret is inside of or directly behind of mention, do not query
     var value = this.props.value || "";
