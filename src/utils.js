@@ -141,10 +141,10 @@ module.exports = {
       if(displayTransform) display = displayTransform(id, display, type);
 
       var substr = value.substring(start, match.index);
-      textIteratee( substr, start, currentPlainTextIndex );
+      if (textIteratee( substr, start, currentPlainTextIndex )) return;
       currentPlainTextIndex += substr.length;
 
-      markupIteratee( match[0], match.index, currentPlainTextIndex, id, display, type, start );
+      if (markupIteratee( match[0], match.index, currentPlainTextIndex, id, display, type, start )) return;
       currentPlainTextIndex += display.length;
 
       start = regex.lastIndex;
@@ -169,25 +169,19 @@ module.exports = {
 
     var result;
     var textIteratee = function(substr, index, substrPlainTextIndex) {
-      if(result !== undefined) return;
-
       if(substrPlainTextIndex + substr.length >= indexInPlainText) {
         // found the corresponding position in the current plain text range
         result = index + indexInPlainText - substrPlainTextIndex;
+        return true;
       }
     };
     var markupIteratee = function(markup, index, mentionPlainTextIndex, id, display, type, lastMentionEndIndex) {
-      if(result !== undefined) return;
-
       if(mentionPlainTextIndex + display.length > indexInPlainText) {
         // found the corresponding position inside current match,
         // return the index of the first or after the last char of the matching markup
         // depending on whether the `inMarkupCorrection`
-        if(inMarkupCorrection === 'NULL') {
-          result = null;
-        } else {
-          result = index + (inMarkupCorrection === 'END' ? markup.length : 0);
-        }
+        result = inMarkupCorrection === 'NULL' ? null : index + (inMarkupCorrection === 'END' ? markup.length : 0);
+        return true;
       }
     };
 
@@ -199,23 +193,19 @@ module.exports = {
   },
 
   // For a given indexInPlainText that lies inside a mention,
-  // returns a the index of of the first char of the mention in the plain text.
-  // If indexInPlainText does not lie inside a mention, returns indexInPlainText.
+  // returns the index of of the first char of the mention in the plain text.
+  // If indexInPlainText does not lie inside a mention, returns undefined.
   findStartOfMentionInPlainText: function(value, markup, indexInPlainText, displayTransform) {
-    var result = indexInPlainText;
-    var foundMention = false;
-
+    var result;
     var markupIteratee = function(markup, index, mentionPlainTextIndex, id, display, type, lastMentionEndIndex) {
       if(mentionPlainTextIndex <= indexInPlainText && mentionPlainTextIndex + display.length > indexInPlainText) {
         result = mentionPlainTextIndex;
-        foundMention = true;
+        return true;
       }
     };
     this.iterateMentionsMarkup(value, markup, function(){}, markupIteratee, displayTransform);
 
-    if (foundMention) {
-      return result;
-    }
+    return result;
   },
 
   // Returns whether the given plain text index lies inside a mention
