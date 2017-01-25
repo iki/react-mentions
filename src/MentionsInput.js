@@ -540,7 +540,7 @@ const MentionsInput = React.createClass({
     this.suggestions = utils.extend({}, this.suggestions, update)
 
     this.setState({
-      suggestions: utils.extend(this.suggestions)
+      suggestions: this.suggestions
     });
   },
 
