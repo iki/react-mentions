@@ -481,10 +481,9 @@ const MentionsInput = React.createClass({
     // Invalidate previous queries. Async results for previous queries will be neglected.
     this.clearSuggestions()
 
-    // If caret is inside of or directly behind of mention, do not query
     var value = this.props.value || "";
-    if( utils.isInsideOfMention(value, this.props.markup, caretPosition, this.props.displayTransform) ||
-        utils.isInsideOfMention(value, this.props.markup, caretPosition-1, this.props.displayTransform) ) {
+    // If caret is inside mention, do not query
+    if (utils.isInsideOfMention(value, this.props.markup, caretPosition, this.props.displayTransform)) {
       return;
     }
 
