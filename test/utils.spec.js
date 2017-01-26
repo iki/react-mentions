@@ -15,6 +15,12 @@ describe("utils", function() {
   var value = "Hi @[John Doe](user:johndoe), \n\nlet's add @[joe@smoe.com](email:joe@smoe.com) to this conversation...";
   var plainText = "Hi John Doe, \n\nlet's add joe@smoe.com to this conversation...";
 
+  var johnPlainText = "John Doe";
+  var johnMarkup = "@[John Doe](user:johndoe)";
+
+  var joePlainText = "joe@smoe.com";
+  var joeMarkup = "@[joe@smoe.com](email:joe@smoe.com)";
+
   var displayTransform = function(id) {
     return "<--" + id + "-->"
   }
@@ -191,54 +197,58 @@ describe("utils", function() {
       expect(result).to.equal(10);
     });
 
-    it("should return the index of the corresponding markup's first character if the plain text index lies inside a mention", function() {
+    it("should return the index of the corresponding markup's first character if the plain text index is at the start of any mention", function() {
       // index for first char of markup
-      var plainTextIndex = plainText.indexOf("John Doe");
+      var plainTextIndex = plainText.indexOf(johnPlainText);
       var result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex);
-      expect(result).to.equal(value.indexOf("@[John Doe](user:johndoe)"));
+      expect(result).to.equal(value.indexOf(johnMarkup));
+    });
 
+    it("should return the index of the corresponding markup's first character if the plain text index is inside any mention", function() {
       // index of char inside the markup
-      var joeMarkup = "@[joe@smoe.com](email:joe@smoe.com)";
-      plainTextIndex = plainText.indexOf("joe@smoe.com") + 3;
-      result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex);
-      expect(result).to.equal(value.indexOf(joeMarkup));
-
-      // index of markup's last char
-      plainTextIndex = plainText.indexOf("joe@smoe.com") + "joe@smoe.com".length - 1;
-      result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex);
+      var plainTextIndex = plainText.indexOf(joePlainText) + 3;
+      var result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex);
       expect(result).to.equal(value.indexOf(joeMarkup));
     });
 
-    it("should return the index of the corresponding markup's last character if the plain text index lies inside a mention and the `inMarkupCorrection` is set to 'END'", function() {
+    it("should return the index of the corresponding markup's first character if the plain text index is at the end of any mention", function() {
+      // index of markup's last char
+      var plainTextIndex = plainText.indexOf(joePlainText) + joePlainText.length - 1;
+      var result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex);
+      expect(result).to.equal(value.indexOf(joeMarkup));
+    });
+
+    it("should return the index of the corresponding markup's last character if the plain text index is at the start of any mention and the `inMarkupCorrection` is set to 'END'", function() {
       // index for first char of markup
-      var plainTextIndex = plainText.indexOf("John Doe");
+      var plainTextIndex = plainText.indexOf(johnPlainText);
       var result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex, 'END');
-      expect(result).to.equal(value.indexOf("@[John Doe](user:johndoe)"));
+      expect(result).to.equal(value.indexOf(johnMarkup));
+    });
 
+    it("should return the index of the corresponding markup's last character if the plain text index is inside any mention and the `inMarkupCorrection` is set to 'END'", function() {
       // index of char inside the markup
-      var joeMarkup = "@[joe@smoe.com](email:joe@smoe.com)";
-      plainTextIndex = plainText.indexOf("joe@smoe.com") + 3;
-      result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex, 'END');
-      expect(result).to.equal(value.indexOf(joeMarkup) + joeMarkup.length);
-
-      // index of markup's last char
-      plainTextIndex = plainText.indexOf("joe@smoe.com") + "joe@smoe.com".length - 1;
-      result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex, 'END');
+      var plainTextIndex = plainText.indexOf(joePlainText) + 3;
+      var result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex, 'END');
       expect(result).to.equal(value.indexOf(joeMarkup) + joeMarkup.length);
     });
 
-    it("should return `null` if `inMarkupCorrection` is set to 'NULL'", function() {
+    it("should return the index of the corresponding markup's last character if the plain text index is at the end of any mention and the `inMarkupCorrection` is set to 'END'", function() {
+      // index of markup's last char
+      var plainTextIndex = plainText.indexOf(joePlainText) + joePlainText.length - 1;
+      var result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex, 'END');
+      expect(result).to.equal(value.indexOf(joeMarkup) + joeMarkup.length);
+    });
+
+    it("should return `null` if the plain text index is inside any mention and the `inMarkupCorrection` is set to 'NULL'", function() {
       // index of char inside the markup
-      var joeMarkup = "@[joe@smoe.com](email:joe@smoe.com)";
-      var plainTextIndex = plainText.indexOf("joe@smoe.com") + 3;
+      var plainTextIndex = plainText.indexOf(joePlainText) + 3;
       var result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex, 'NULL');
       expect(result).to.equal(null);
     });
 
-    it("should return the index of the corresponding markup's first character if the plain text index lies inside a mention with display transform", function() {
+    it("should return the index of the corresponding markup's first character if the plain text index is inside any mention with display transform", function() {
       // index of char inside the markup
-      var joeMarkup = "@[joe@smoe.com](email:joe@smoe.com)";
-      var plainTextIndex = plainTextDisplayTransform.indexOf("joe@smoe.com") + 3;
+      var plainTextIndex = plainTextDisplayTransform.indexOf(joePlainText) + 3;
       var result = utils.mapPlainTextIndex(value, defaultMarkup, plainTextIndex);
       expect(result).to.equal(value.indexOf(joeMarkup));
     });
@@ -254,7 +264,7 @@ describe("utils", function() {
 
   describe("#findStartOfMentionInPlainText", function() {
 
-    it("should return the index of the mention's first char in the plain text if the passed index lies inside a mention", function() {
+    it("should return the index of the mention's first char in the plain text if the passed index is inside any mention", function() {
       var result = utils.findStartOfMentionInPlainText(value, defaultMarkup, plainText.indexOf("Doe"));
       expect(result).to.equal(plainText.indexOf("John Doe"));
     });
