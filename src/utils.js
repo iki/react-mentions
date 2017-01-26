@@ -9,6 +9,7 @@ var PLACEHOLDERS = {
   type: "__type__"
 }
 var PLACEHOLDER_MARKUP_POSITIONS_CACHE = {};
+var MARKUP_REGEX_CACHE = {};
 
 var escapeMap = {
   '&': '&amp;',
@@ -53,6 +54,16 @@ module.exports = {
       markupPattern = markupPattern + "$";
     }
     return new RegExp(markupPattern, "g");
+  },
+
+  // cache provided regex, or get previously cached regex, or build and cache regex from provided markup
+  useMarkupRegex: function(markup, regex, cache=MARKUP_REGEX_CACHE) {
+    return cache[markup] = regex || cache[markup] || this.markupToRegex(markup);
+  },
+
+  // get previously cached regex, or build and cache regex from provided markup
+  getMarkupRegex: function(markup) {
+    return this.useMarkupRegex(markup);
   },
 
   spliceString: function(str, start, end, insert) {
@@ -109,7 +120,7 @@ module.exports = {
   // in between those markups using `textIteratee` and the markup occurrences using the
   // `markupIteratee`.
   iterateMentionsMarkup: function(value, markup, textIteratee, markupIteratee, displayTransform) {
-    var regex = this.markupToRegex(markup);
+    var regex = this.getMarkupRegex(markup);
     var {id: idPos, type: typePos, display: displayPos} = this.getCapturingGroupPositions(markup);
 
     var match;
@@ -270,7 +281,7 @@ module.exports = {
   },
 
   getPlainText: function(value, markup, displayTransform) {
-    var regex = this.markupToRegex(markup);
+    var regex = this.getMarkupRegex(markup);
     var {id: idPos, type: typePos, display: displayPos} = this.getCapturingGroupPositions(markup);
 
     return value.replace(regex, function() {

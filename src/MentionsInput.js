@@ -80,6 +80,7 @@ const MentionsInput = React.createClass({
     singleLine: PropTypes.bool,
 
     markup: PropTypes.string,
+    markupRegex: PropTypes.instanceOf(RegExp),
     value: PropTypes.string,
 
     displayTransform: PropTypes.func,
@@ -114,6 +115,7 @@ const MentionsInput = React.createClass({
   },
 
   render: function() {
+    if (this.props.markupRegex) utils.useMarkupRegex(this.props.markup, this.props.markupRegex);
     return (
       <div ref="container" {...substyle(this.props, getModifiers(this.props))}>
         { this.renderControl() }
