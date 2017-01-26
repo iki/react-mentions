@@ -35,15 +35,15 @@ describe("utils", function() {
 
   });
 
-  describe("#getPositionOfCapturingGroup", function() {
+  describe("#getCapturingGroupPositions", function() {
 
     var testData = {
-      "@[__display__](__id__)" : { display: 0, id: 1, type: null },
-      "@[__display__](__type__:__id__)" : { display: 0, id: 2, type: 1 },
-      "@(__type__:__id__)" : { display: 1, id: 1, type: 0 },
-      "{{__id__#__display__}}" : { display: 1, id: 0, type: null },
-      "{{__id__}}" : { display: 0, id: 0, type: null },
-      "{{__display__}}" : { display: 0, id: 0, type: null }
+      "@[__display__](__id__)" : { display: 1, id: 2 },
+      "@[__display__](__type__:__id__)" : { display: 1, id: 3, type: 2 },
+      "@(__type__:__id__)" : { display: 2, id: 2, type: 1 },
+      "{{__id__#__display__}}" : { display: 2, id: 1 },
+      "{{__id__}}" : { display: 1, id: 1 },
+      "{{__display__}}" : { display: 1, id: 1 }
     };
 
     for(var key in testData) {
@@ -53,19 +53,9 @@ describe("utils", function() {
         var markup = key;
         var positions = testData[key];
 
-        it("should return " + positions.display + " for the `display` position in markup `" + markup + "`", function() {
-          expect(utils.getPositionOfCapturingGroup(markup, "display")).to.equal(positions.display);
+        it("should return positions " + JSON.stringify(positions) + " for markup `" + markup + "`", function() {
+          expect(utils.getCapturingGroupPositions(markup)).to.deep.equal(positions);
         });
-
-        it("should return " + positions.id + " for the `id` position in markup `" + markup + "`", function() {
-          expect(utils.getPositionOfCapturingGroup(markup, "id")).to.equal(positions.id);
-        });
-
-        it("should return " + positions.type + " for the `type` position in markup `" + markup + "`", function() {
-          expect(utils.getPositionOfCapturingGroup(markup, "type")).to.equal(positions.type);
-        });
-
-
       })();
     }
 

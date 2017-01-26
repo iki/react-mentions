@@ -1,8 +1,14 @@
+import filter from 'lodash/filter'
+import invert from 'lodash/invert'
+import isEmpty from 'lodash/isEmpty';
+import mapValues from 'lodash/mapValues';
+
 var PLACEHOLDERS = {
   id: "__id__",
   display: "__display__",
   type: "__type__"
 }
+var PLACEHOLDER_MARKUP_POSITIONS_CACHE = {};
 
 var escapeMap = {
   '&': '&amp;',
@@ -27,12 +33,6 @@ var createEscaper = function(map) {
     string = string == null ? '' : '' + string;
     return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) : string;
   };
-};
-
-var numericComparator = function(a, b) {
-  a = a === null ? Number.MAX_VALUE : a;
-  b = b === null ? Number.MAX_VALUE : b;
-  return a - b;
 };
 
 module.exports = {
@@ -76,46 +76,33 @@ module.exports = {
     return Object.prototype.toString.call(obj) === "[object Number]";
   },
 
-  /**
-   * parameterName: "id", "display", or "type"
-   */
-  getPositionOfCapturingGroup: function(markup, parameterName) {
-    if(parameterName !== "id" && parameterName !== "display" && parameterName !== "type") {
-      throw new Error("parameterName must be 'id', 'display', or 'type'");
-    }
+  computeCapturingGroupPositions: function(markup, placeholders=PLACEHOLDERS) {
+    // Build group position map {key: position+1} from placeholders map {key: placeholder}:
+    // map its values to get {key: indexInMarkupOrMinus1},
+    // invert it to get {indexInMarkupOrMinus1: key} (index is always different for non overlapping placeholders),
+    // filter out missing placeholders to get sorted array of [position: key],
+    // invert it again to get position map {key: position},
+    // and coerce values to number increased by 1 to get group positions map {key: position+1}.
+    var positions = mapValues(
+      invert(filter(
+        invert(mapValues(placeholders, p => markup.indexOf(p))),
+        (k, index) => index >= 0)),
+      position => parseInt(position, 10) + 1);
 
-    // calculate positions of placeholders in the markup
-    var indexDisplay = markup.indexOf(PLACEHOLDERS.display);
-    var indexId = markup.indexOf(PLACEHOLDERS.id);
-    var indexType = markup.indexOf(PLACEHOLDERS.type);
+    if (!positions.id && !positions.display)
+      throw new Error(`Markup '${markup}' has to contain at least one of placeholders __id__ or __display__`);
 
-    // set indices to null if not found
-    if(indexDisplay < 0) indexDisplay = null;
-    if(indexId < 0) indexId = null;
-    if(indexType < 0) indexType = null;
+    // if either id or display is not used in markup, use the same group to make id and display equal
+    if (!positions.id) positions.id = positions.display;
+    if (!positions.display) positions.display = positions.id;
 
-    if(indexDisplay === null && indexId === null) {
-      // markup contains none of the mandatory placeholders
-      throw new Error("The markup `" + markup + "` must contain at least one of the placeholders `__id__` or `__display__`");
-    }
+    return positions;
+  },
 
-    if(indexType === null && parameterName === "type") {
-      // markup does not contain optional __type__ placeholder
-      return null;
-    }
-
-    // sort indices in ascending order (null values will always be at the end)
-    var sortedIndices = [indexDisplay, indexId, indexType].sort(numericComparator);
-
-    // If only one the placeholders __id__ and __display__ is present,
-    // use the captured string for both parameters, id and display
-    if(indexDisplay === null) indexDisplay = indexId;
-    if(indexId === null) indexId = indexDisplay;
-
-    if(parameterName === "id") return sortedIndices.indexOf(indexId);
-    if(parameterName === "display") return sortedIndices.indexOf(indexDisplay);
-    if(parameterName === "type") return indexType === null ? null : sortedIndices.indexOf(indexType);
-
+  getCapturingGroupPositions: function(markup, placeholders=PLACEHOLDERS, cache=PLACEHOLDER_MARKUP_POSITIONS_CACHE) {
+    // Get group position map {key: position+1} from cache for given markup,
+    // or compute it and store in cache
+    return cache[markup] || (cache[markup] = this.computeCapturingGroupPositions(markup, placeholders));
   },
 
   // Finds all occurences of the markup in the value and iterates the plain text sub strings
@@ -123,22 +110,20 @@ module.exports = {
   // `markupIteratee`.
   iterateMentionsMarkup: function(value, markup, textIteratee, markupIteratee, displayTransform) {
     var regex = this.markupToRegex(markup);
-    var displayPos = this.getPositionOfCapturingGroup(markup, "display");
-    var idPos = this.getPositionOfCapturingGroup(markup, "id");
-    var typePos = this.getPositionOfCapturingGroup(markup, "type");
+    var {id: idPos, type: typePos, display: displayPos} = this.getCapturingGroupPositions(markup);
 
     var match;
     var start = 0;
     var currentPlainTextIndex = 0;
 
     // detect all mention markup occurences in the value and iterate the matches
-    while((match = regex.exec(value)) !== null) {
+    while (match = regex.exec(value)) {
 
-      var id = match[idPos+1];
-      var display = match[displayPos+1];
-      var type = typePos !== null ? match[typePos+1] : null;
+      var id = idPos && match[idPos];
+      var type = typePos && match[typePos];
+      var display = displayPos && match[displayPos];
 
-      if(displayTransform) display = displayTransform(id, display, type);
+      if (displayTransform) display = displayTransform(id, display, type);
 
       var substr = value.substring(start, match.index);
       if (textIteratee( substr, start, currentPlainTextIndex )) return;
@@ -286,15 +271,15 @@ module.exports = {
 
   getPlainText: function(value, markup, displayTransform) {
     var regex = this.markupToRegex(markup);
-    var idPos = this.getPositionOfCapturingGroup(markup, "id");
-    var displayPos = this.getPositionOfCapturingGroup(markup, "display");
-    var typePos = this.getPositionOfCapturingGroup(markup, "type");
+    var {id: idPos, type: typePos, display: displayPos} = this.getCapturingGroupPositions(markup);
+
     return value.replace(regex, function() {
       // first argument is the whole match, capturing groups are following
-      var id = arguments[idPos+1];
-      var display = arguments[displayPos+1];
-      var type = arguments[typePos+1];
-      if(displayTransform) display = displayTransform(id, display, type);
+      var id = arguments[idPos];
+      var display = arguments[displayPos];
+      var type = arguments[typePos];
+
+      if (displayTransform) display = displayTransform(id, display, type);
       return display;
     });
   },
