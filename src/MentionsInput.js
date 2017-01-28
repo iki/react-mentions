@@ -48,6 +48,7 @@ var KEY = { TAB : 9, RETURN : 13, ESC : 27, UP : 38, DOWN : 40 };
 var DEFAULT_PROPS = {
   markup: '@[__display__](__id__)',
   singleLine: false,
+  treatMentionAsUnit: true,
   displayTransform: function(id, display, type) {
     return display;
   },
@@ -78,6 +79,7 @@ const MentionsInput = React.createClass({
      * instead of a textarea
      */
     singleLine: PropTypes.bool,
+    treatMentionAsUnit: PropTypes.bool,
 
     markup: PropTypes.string,
     markupRegex: PropTypes.instanceOf(RegExp),
@@ -267,7 +269,8 @@ const MentionsInput = React.createClass({
       newPlainTextValue,
       this.state.selectionStart, this.state.selectionEnd,
       ev.target.selectionEnd,
-      this.props.displayTransform
+      this.props.displayTransform,
+      this.props.treatMentionAsUnit
     );
 
     // In case a mention is deleted, also adjust the new plain text value
@@ -280,13 +283,14 @@ const MentionsInput = React.createClass({
 
     // Adjust selection range in case a mention will be deleted by the characters outside of the
     // selection range that are automatically deleted
-    var startOfMention = utils.findStartOfMentionInPlainText(value, this.props.markup, selectionStart, this.props.displayTransform);
+    if (this.props.treatMentionAsUnit) {
+      var startOfMention = utils.findStartOfMentionInPlainText(value, this.props.markup, selectionStart, this.props.displayTransform);
 
-    if(startOfMention !== undefined && this.state.selectionEnd > startOfMention) {
-      // only if a deletion has taken place
-      selectionStart = startOfMention;
-      selectionEnd = selectionStart;
-      setSelectionAfterMentionChange = true;
+      if(startOfMention !== undefined && this.state.selectionEnd > startOfMention) {
+        // only if a deletion has taken place
+        selectionStart = selectionEnd = startOfMention;
+        setSelectionAfterMentionChange = true;
+      }
     }
 
     this.setState({

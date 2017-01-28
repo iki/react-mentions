@@ -209,10 +209,11 @@ module.exports = {
     var mentionStart = this.findStartOfMentionInPlainText(value, markup, indexInPlainText, displayTransform);
     return mentionStart !== undefined && mentionStart !== indexInPlainText
   },
-  
+
   // Applies a change from the plain text textarea to the underlying marked up value
   // guided by the textarea text selection ranges before and after the change
-  applyChangeToValue: function(value, markup, plainTextValue, selectionStartBeforeChange, selectionEndBeforeChange, selectionEndAfterChange, displayTransform) {
+  applyChangeToValue: function(value, markup, plainTextValue, selectionStartBeforeChange, selectionEndBeforeChange,
+                               selectionEndAfterChange, displayTransform, treatMentionAsUnit) {
     var oldPlainTextValue = this.getPlainText(value, markup, displayTransform);
 
     var lengthDelta = oldPlainTextValue.length - plainTextValue.length;
@@ -249,7 +250,7 @@ module.exports = {
 
     var controlSpliceStart = this.mapPlainTextIndex(value, markup, spliceStart, 'NULL', displayTransform);
     var controlSpliceEnd = this.mapPlainTextIndex(value, markup, spliceEnd, 'NULL', displayTransform);
-    var willRemoveMention = controlSpliceStart === null || controlSpliceEnd === null;
+    var willRemoveMention = treatMentionAsUnit && (controlSpliceStart === null || controlSpliceEnd === null);
 
     var newValue = this.spliceString(value, mappedSpliceStart, mappedSpliceEnd, insert);
 
