@@ -104,6 +104,9 @@ const MentionsInput = React.createClass({
   getInitialState: function () {
     this.suggestions = {}
     return {
+      // Keep value in local state to avoid rerender with old value on local state update.
+      // See http://stackoverflow.com/a/28922465/899047.
+      value: "",
       focusIndex: 0,
 
       selectionStart: null,
@@ -236,7 +239,7 @@ const MentionsInput = React.createClass({
   // Returns the text to set as the value of the textarea with all markups removed
   getPlainText: function() {
     return utils.getPlainText(
-      this.props.value || "",
+      this.state.value || this.props.value || "",
       this.props.markup,
       this.props.displayTransform
     );
@@ -294,9 +297,10 @@ const MentionsInput = React.createClass({
     }
 
     this.setState({
-      selectionStart: selectionStart,
-      selectionEnd: selectionEnd,
-      setSelectionAfterMentionChange: setSelectionAfterMentionChange,
+      value: newValue,
+      selectionStart,
+      selectionEnd,
+      setSelectionAfterMentionChange,
     });
 
     var mentions = utils.getMentions(newValue, this.props.markup);
@@ -573,6 +577,7 @@ const MentionsInput = React.createClass({
     }
     var newCaretPosition = querySequenceStart + displayValue.length;
     this.setState({
+      value: newValue,
       selectionStart: newCaretPosition,
       selectionEnd: newCaretPosition,
       setSelectionAfterMentionChange: true
