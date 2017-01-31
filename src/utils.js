@@ -58,6 +58,7 @@ module.exports = {
 
   // cache provided regex, or get previously cached regex, or build and cache regex from provided markup
   useMarkupRegex: function(markup, regex, cache=MARKUP_REGEX_CACHE) {
+    // if (regex) console.log('mentions.regex', markup, regex, cache[markup]);
     return cache[markup] = regex || cache[markup] || this.markupToRegex(markup);
   },
 
@@ -100,6 +101,8 @@ module.exports = {
         (k, index) => index >= 0)),
       position => parseInt(position, 10) + 1);
 
+    // console.log('mentions.plaintext.mention.positions', markup, positions, placeholders);
+
     if (!positions.id && !positions.display)
       throw new Error(`Markup '${markup}' has to contain at least one of placeholders __id__ or __display__`);
 
@@ -137,6 +140,10 @@ module.exports = {
       if (displayTransform) display = displayTransform(id, display, type);
 
       var substr = value.substring(start, match.index);
+
+      // console.log('mentions.plaintext.mention.iter', value, markup, regex, [start, currentPlainTextIndex, match.index],
+      //   substr, [typePos, type], [idPos, id], [displayPos, match[displayPos], display]);
+
       if (textIteratee( substr, start, currentPlainTextIndex )) return;
       currentPlainTextIndex += substr.length;
 
@@ -194,12 +201,18 @@ module.exports = {
   findStartOfMentionInPlainText: function(value, markup, indexInPlainText, displayTransform) {
     var result;
     var markupIteratee = function(markup, index, mentionPlainTextIndex, id, display, type, lastMentionEndIndex) {
+      // console.log('mentions.plaintext.mention.is-inside.test', index, type, id, display,
+      //   [mentionPlainTextIndex, indexInPlainText, mentionPlainTextIndex + display.length, lastMentionEndIndex]);
       if(mentionPlainTextIndex <= indexInPlainText && mentionPlainTextIndex + display.length > indexInPlainText) {
         result = mentionPlainTextIndex;
         return true;
       }
     };
     this.iterateMentionsMarkup(value, markup, function(){}, markupIteratee, displayTransform);
+
+    // console.log('mentions.plaintext.mention.is-inside', value, indexInPlainText, result, {
+    //   markup, displayTransform
+    // });
 
     return result;
   },
@@ -292,6 +305,12 @@ module.exports = {
       var type = arguments[typePos];
 
       if (displayTransform) display = displayTransform(id, display, type);
+
+      // console.log('mentions.plaintext', value, arguments[displayPos+1], display, {
+      //   markup, displayTransform, regex, idPos, displayPos, typePos, id, display, type,
+      //   display0: arguments[displayPos+1]
+      // });
+
       return display;
     });
   },

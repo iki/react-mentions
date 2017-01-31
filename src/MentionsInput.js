@@ -5,6 +5,7 @@ import Radium from './OptionalRadium';
 import keys from 'lodash/keys';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
+import clone from 'lodash/clone';
 
 import defaultStyle from 'substyle';
 
@@ -156,9 +157,11 @@ const MentionsInput = React.createClass({
   renderControl: function() {
     let { singleLine } = this.props;
     let inputProps = this.getInputProps(!singleLine);
+    let controlProps = substyle(this.props, getModifiers(this.props, "control"));
 
+    // console.log('mentions.render.input', inputProps.name, inputProps.value, {singleLine, inputProps, controlProps: Object.assign({}, controlProps)});
     return (
-      <div { ...substyle(this.props, getModifiers(this.props, "control")) }>
+      <div { ...controlProps }>
         { this.renderHighlighter(inputProps.style) }
         { singleLine ? this.renderInput(inputProps) : this.renderTextarea(inputProps) }
       </div>
@@ -296,6 +299,17 @@ const MentionsInput = React.createClass({
       }
     }
 
+    // console.log('mentions.change', [value, newValue],
+    //   [utils.getPlainText(value, this.props.markup, this.props.displayTransform), ev.target.value, newPlainTextValue],
+    //   [this.state.selectionStart, this.state.selectionEnd, this.state.setSelectionAfterMentionChange],
+    //   [ev.target.selectionStart, ev.target.selectionEnd],
+    //   [startOfMention, startOfMention !== undefined && this.state.selectionEnd > startOfMention],
+    //   [selectionStart, selectionEnd, setSelectionAfterMentionChange],
+    //   {
+    //     state: clone(this.state),
+    //     props: this.props,
+    //   });
+
     this.setState({
       value: newValue,
       selectionStart,
@@ -316,6 +330,13 @@ const MentionsInput = React.createClass({
   handleSelect: function(ev) {
     // do nothing while a IME composition session is active
     if (isComposing) return;
+
+    // console.log('mentions.select', [this.state.selectionStart, this.state.selectionEnd], [ev.target.selectionStart, ev.target.selectionEnd],
+    //   this._queryId, this.props.value,
+    //   {
+    //     state: clone(this.state),
+    //     props: this.props,
+    //   });
 
     if (this.state.selectionStart !== ev.target.selectionStart || this.state.selectionEnd !== ev.target.selectionEnd) {
       // keep track of selection range / caret position
@@ -349,6 +370,14 @@ const MentionsInput = React.createClass({
         ev.preventDefault();
         ev.stopPropagation();
 
+        // console.log('mentions.keydown', ev.keyCode, this.props.value,
+        //   utils.countSuggestions(this.suggestions), utils.countSuggestions(this.state.suggestions),
+        //   {
+        //     suggestionsComp,
+        //     state: clone(this.state),
+        //     props: this.props,
+        //   });
+
         this.keyHandlers[ev.keyCode](this);
         return;
       }
@@ -379,6 +408,14 @@ const MentionsInput = React.createClass({
   handleBlur: function(ev) {
     const clickedSuggestion = this._suggestionsMouseDown
     this._suggestionsMouseDown = false;
+
+    // console.log('mentions.blur', this.props.value, ev.target.value,
+    //   {
+    //     clickedSuggestion,
+    //     state: clone(this.state),
+    //     props: this.props,
+    //     target: clone(ev.target),
+    //   });
 
     // only reset selection if the mousedown happened on an element
     // other than the suggestions overlay
@@ -476,6 +513,7 @@ const MentionsInput = React.createClass({
 
     var el = this.refs.input;
     if(el.setSelectionRange) {
+      // console.log('mentions.select.set', selectionStart, selectionEnd, el);
       el.setSelectionRange(selectionStart, selectionEnd);
     }
     else if(el.createTextRange) {
@@ -484,6 +522,7 @@ const MentionsInput = React.createClass({
       range.moveEnd('character', selectionEnd);
       range.moveStart('character', selectionStart);
       range.select();
+      // console.log('mentions.select.create', selectionStart, selectionEnd, el, range);
     }
   },
 
@@ -492,6 +531,11 @@ const MentionsInput = React.createClass({
     this.clearSuggestions()
 
     var value = this.props.value || "";
+
+    // console.log('mentions.suggestions.check', this._queryId, this.props.value, plainTextValue, caretPosition,
+    //   plainTextValue.substring(0, caretPosition),
+    //   utils.countSuggestions(this.suggestions), utils.countSuggestions(this.state.suggestions), this.props);
+
     // If caret is inside mention, do not query
     if (utils.isInsideOfMention(value, this.props.markup, caretPosition, this.props.displayTransform)) {
       return;
@@ -509,6 +553,10 @@ const MentionsInput = React.createClass({
 
       var regex = _getTriggerRegex(child.props.trigger);
       var match = substring.match(regex);
+
+      // console.log('mentions.suggestions.match', that._queryId, substring, child.props.trigger, regex,
+      //   match && [match, substring.indexOf(match[1], match.index),  match[1].length]);
+
       if(match) {
         var querySequenceStart = substring.indexOf(match[1], match.index);
         that.queryData(match[2], child, querySequenceStart, querySequenceStart+match[1].length, plainTextValue);
@@ -519,6 +567,15 @@ const MentionsInput = React.createClass({
   clearSuggestions: function() {
     // Invalidate previous queries. Async results for previous queries will be neglected.
     this._queryId++;
+
+    // console.log('mentions.suggestions.clear', this._queryId, this.props.value,
+    //   utils.countSuggestions(this.suggestions), utils.countSuggestions(this.state.suggestions),
+    //   {
+    //     state: clone(this.state),
+    //     props: this.props,
+    //     currentSuggestions: clone(this.suggestions),
+    //   });
+
     this.setState({
       suggestions: {},
       focusIndex: 0
@@ -537,6 +594,18 @@ const MentionsInput = React.createClass({
   updateSuggestions: function(queryId, mentionDescriptor, query, querySequenceStart, querySequenceEnd, plainTextValue, suggestions) {
     // neglect async results from previous queries
     if(queryId !== this._queryId) return;
+
+    // console.log('mentions.suggestions.update', mentionDescriptor.props.type,  this._queryId, this.props.value, plainTextValue,
+    //   utils.countSuggestions(this.suggestions), utils.countSuggestions(this.state.suggestions),
+    //   this.suggestions && this.suggestions[mentionDescriptor.props.type] && this.suggestions[mentionDescriptor.props.type].results.length,
+    //   this.state.suggestions && this.state.suggestions[mentionDescriptor.props.type] && this.state.suggestions[mentionDescriptor.props.type].results.length,
+    //   suggestions && suggestions.length,
+    //   {
+    //     mentionDescriptor, query, querySequenceStart, querySequenceEnd, suggestions,
+    //     state: clone(this.state),
+    //     props: this.props,
+    //     currentSuggestions: clone(this.suggestions),
+    //   });
 
     var update = {};
     update[mentionDescriptor.props.type] = {
