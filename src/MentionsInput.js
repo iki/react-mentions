@@ -5,7 +5,7 @@ import Radium from './OptionalRadium';
 import keys from 'lodash/keys';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
-import clone from 'lodash/clone';
+// import clone from 'lodash/clone';
 
 import defaultStyle from 'substyle';
 
@@ -50,6 +50,8 @@ var DEFAULT_PROPS = {
   markup: '@[__display__](__id__)',
   singleLine: false,
   treatMentionAsUnit: true,
+  useHighlighter: true,
+  reuseInputStyleForHighlighter: true,
   displayTransform: function(id, display, type) {
     return display;
   },
@@ -81,6 +83,8 @@ const MentionsInput = React.createClass({
      */
     singleLine: PropTypes.bool,
     treatMentionAsUnit: PropTypes.bool,
+    useHighlighter: PropTypes.bool,
+    reuseInputStyleForHighlighter: PropTypes.bool,
 
     markup: PropTypes.string,
     markupRegex: PropTypes.instanceOf(RegExp),
@@ -159,7 +163,7 @@ const MentionsInput = React.createClass({
     let inputProps = this.getInputProps(!singleLine);
     let controlProps = substyle(this.props, getModifiers(this.props, "control"));
 
-    // console.log('mentions.render.input', inputProps.name, inputProps.value, {singleLine, inputProps, controlProps: Object.assign({}, controlProps)});
+    // console.log('mentions.render.input', inputProps.name, inputProps.value, {singleLine, inputProps, controlProps: {...controlProps}, props: this.props});
     return (
       <div { ...controlProps }>
         { this.renderHighlighter(inputProps.style) }
@@ -217,13 +221,13 @@ const MentionsInput = React.createClass({
 
   renderHighlighter: function(inputStyle) {
     let { selectionStart, selectionEnd } = this.state;
-    let { markup, displayTransform, singleLine, children, value } = this.props;
+    let { markup, displayTransform, singleLine, children, value, useHighlighter, reuseInputStyleForHighlighter } = this.props;
 
-    return (
+    return useHighlighter ? (
       <Highlighter
         ref="highlighter"
         { ...substyle(this.props, getModifiers(this.props, "highlighter")) }
-        inputStyle={ inputStyle }
+        inputStyle={ reuseInputStyleForHighlighter ? inputStyle : null}
         value={ value }
         markup={ markup }
         displayTransform={ displayTransform }
@@ -236,6 +240,8 @@ const MentionsInput = React.createClass({
 
         { children }
       </Highlighter>
+    ) : (
+      <div> { children } </div>
     );
   },
 
