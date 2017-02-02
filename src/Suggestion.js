@@ -41,13 +41,16 @@ class Suggestion extends Component {
     let { id, query, descriptor, suggestion, index, focused } = this.props;
 
     let display = this.getDisplay();
-    let highlightedDisplay = this.renderHighlightedDisplay(display, query);
 
-    if(descriptor.props.renderSuggestion) {
-      return descriptor.props.renderSuggestion(suggestion, query, highlightedDisplay, index, focused);
+    if (descriptor.props.highlightSearch) {
+      display = this.renderHighlightedDisplay(display, query);
     }
 
-    return highlightedDisplay;
+    if(descriptor.props.renderSuggestion) {
+      return descriptor.props.renderSuggestion(suggestion, query, display, index, focused);
+    }
+
+    return display;
   }
 
   getDisplay() {

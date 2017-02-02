@@ -29,6 +29,7 @@ Mention.propTypes = {
   onAdd: PropTypes.func,
   onRemove: PropTypes.func,
 
+  highlightSearch: PropTypes.bool,
   renderSuggestion: PropTypes.func,
   appendSpaceOnAdd: PropTypes.bool,
 
@@ -47,6 +48,7 @@ Mention.defaultProps = {
 
   onAdd: () => null,
   onRemove: () => null,
+  highlightSearch: true,
   renderSuggestion: null,
   appendSpaceOnAdd: false,
   isLoading: false
