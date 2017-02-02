@@ -30,6 +30,7 @@ Mention.propTypes = {
   onRemove: PropTypes.func,
 
   renderSuggestion: PropTypes.func,
+  appendSpaceOnAdd: PropTypes.bool,
 
   trigger: PropTypes.oneOfType([
     PropTypes.string,
@@ -47,8 +48,8 @@ Mention.defaultProps = {
   onAdd: () => null,
   onRemove: () => null,
   renderSuggestion: null,
-  isLoading: false,
-  appendSpaceOnAdd: false
+  appendSpaceOnAdd: false,
+  isLoading: false
 };
 
 const defaultStyle = {
