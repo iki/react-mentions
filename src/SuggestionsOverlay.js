@@ -39,6 +39,8 @@ class SuggestionsOverlay extends Component {
     } else if(bottom > suggestions.offsetHeight) {
       suggestions.scrollTop = bottom - suggestions.offsetHeight
     }
+
+    // console.log('mentions.overlay.update', suggestions.children[this.props.focusIndex].getBoundingClientRect(), {top, bottom, topContainer, scrollTop}, suggestions)
   }
 
   render() {
@@ -46,6 +48,9 @@ class SuggestionsOverlay extends Component {
     if(utils.countSuggestions(this.props.suggestions) === 0 && !this.props.isLoading) {
       return null;
     }
+
+    // console.log('mentions.overlay.render', substyle(this.props).style, substyle(this.props, "list").style, this.props,
+    //   this.refs.suggestions && this.refs.suggestions.children[this.props.focusIndex].getBoundingClientRect())
 
     return (
       <div
