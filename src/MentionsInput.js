@@ -50,7 +50,7 @@ var DEFAULT_PROPS = {
   markup: '@[__display__](__id__)',
   singleLine: false,
   treatMentionAsUnit: true,
-  useHighlighter: true,
+  highlightMentions: true,
   reuseInputStyleForHighlighter: true,
   displayTransform: function(id, display, type) {
     return display;
@@ -83,7 +83,7 @@ const MentionsInput = React.createClass({
      */
     singleLine: PropTypes.bool,
     treatMentionAsUnit: PropTypes.bool,
-    useHighlighter: PropTypes.bool,
+    highlightMentions: PropTypes.bool,
     reuseInputStyleForHighlighter: PropTypes.bool,
 
     markup: PropTypes.string,
@@ -221,9 +221,9 @@ const MentionsInput = React.createClass({
 
   renderHighlighter: function(inputStyle) {
     let { selectionStart, selectionEnd } = this.state;
-    let { markup, displayTransform, singleLine, children, value, useHighlighter, reuseInputStyleForHighlighter } = this.props;
+    let { markup, displayTransform, singleLine, children, value, highlightMentions, reuseInputStyleForHighlighter } = this.props;
 
-    return useHighlighter ? (
+    return highlightMentions ? (
       <Highlighter
         ref="highlighter"
         { ...substyle(this.props, getModifiers(this.props, "highlighter")) }
