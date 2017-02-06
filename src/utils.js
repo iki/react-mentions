@@ -45,7 +45,7 @@ module.exports = {
   },
 
   markupToRegex: function(markup, matchAtEnd) {
-    var markupPattern = this.escapeRegex(markup);
+    var markupPattern = '(' + this.escapeRegex(markup) + ')';
     markupPattern = markupPattern.replace(PLACEHOLDERS.display, "(.+?)");
     markupPattern = markupPattern.replace(PLACEHOLDERS.id, "(.+?)");
     markupPattern = markupPattern.replace(PLACEHOLDERS.type, "(.+?)");
@@ -94,12 +94,13 @@ module.exports = {
     // invert it to get {indexInMarkupOrMinus1: key} (index is always different for non overlapping placeholders),
     // filter out missing placeholders to get sorted array of [position: key],
     // invert it again to get position map {key: position},
-    // and coerce values to number increased by 1 to get group positions map {key: position+1}.
+    // and coerce values to number increased by 2 to get group positions map {key: position+2},
+    // because match[0] is the whole regex, match[1] is the whole mention, and groups start at index 2.
     var positions = mapValues(
       invert(filter(
         invert(mapValues(placeholders, p => markup.indexOf(p))),
         (k, index) => index >= 0)),
-      position => parseInt(position, 10) + 1);
+      position => parseInt(position, 10) + 2);
 
     // console.log('mentions.plaintext.mention.positions', markup, positions, placeholders);
 
@@ -137,17 +138,21 @@ module.exports = {
       var type = typePos && match[typePos];
       var display = displayPos && match[displayPos];
 
+      // find index of mention (match group 1) in value
+      var matchIndex = value.indexOf(match[1], match.index);
+
       if (displayTransform) display = displayTransform(id, display, type);
 
-      var substr = value.substring(start, match.index);
+      var substr = value.substring(start, matchIndex);
 
-      // console.log('mentions.plaintext.mention.iter', value, markup, regex, [start, currentPlainTextIndex, match.index],
-      //   substr, [typePos, type], [idPos, id], [displayPos, match[displayPos], display]);
+      // console.log('mentions.plaintext.iter', start, substr, matchIndex, match[1], regex.lastIndex, match, {
+      //   value, markup, regex, currentPlainTextIndex, start, matchIndex, lastIndex: regex.lastIndex,
+      //   substr, typePos, type, idPos, id, displayPos, display0: match[displayPos], display, displayTransform});
 
       if (textIteratee( substr, start, currentPlainTextIndex )) return;
       currentPlainTextIndex += substr.length;
 
-      if (markupIteratee( match[0], match.index, currentPlainTextIndex, id, display, type, start )) return;
+      if (markupIteratee( match[1], matchIndex, currentPlainTextIndex, id, display, type, start )) return;
       currentPlainTextIndex += display.length;
 
       start = regex.lastIndex;
@@ -199,22 +204,24 @@ module.exports = {
   // returns the index of of the first char of the mention in the plain text.
   // If indexInPlainText does not lie inside a mention, returns undefined.
   findStartOfMentionInPlainText: function(value, markup, indexInPlainText, displayTransform) {
-    var result;
+    var surroundingMentionPlainTextIndex;
     var markupIteratee = function(markup, index, mentionPlainTextIndex, id, display, type, lastMentionEndIndex) {
-      // console.log('mentions.plaintext.mention.is-inside.test', index, type, id, display,
-      //   [mentionPlainTextIndex, indexInPlainText, mentionPlainTextIndex + display.length, lastMentionEndIndex]);
-      if(mentionPlainTextIndex <= indexInPlainText && mentionPlainTextIndex + display.length > indexInPlainText) {
-        result = mentionPlainTextIndex;
+      var mentionPlainTextIndexEnd = mentionPlainTextIndex + display.length;
+
+      // console.log('mentions.plaintext.mention.is-inside.test', mentionPlainTextIndex, indexInPlainText, mentionPlainTextIndexEnd,
+      //   {index, type, id, display, mentionPlainTextIndex, indexInPlainText, mentionPlainTextIndexEnd, lastMentionEndIndex});
+
+      if(indexInPlainText >= mentionPlainTextIndex && indexInPlainText < mentionPlainTextIndexEnd) {
+        surroundingMentionPlainTextIndex = mentionPlainTextIndex;
         return true;
       }
     };
     this.iterateMentionsMarkup(value, markup, function(){}, markupIteratee, displayTransform);
 
-    // console.log('mentions.plaintext.mention.is-inside', value, indexInPlainText, result, {
-    //   markup, displayTransform
-    // });
+    // console.log('mentions.plaintext.is-inside', indexInPlainText, surroundingMentionPlainTextIndex,
+    //   {value, markup, indexInPlainText, surroundingMentionPlainTextIndex, displayTransform});
 
-    return result;
+    return surroundingMentionPlainTextIndex;
   },
 
   // Returns whether the given plain text index lies inside a mention
@@ -298,20 +305,18 @@ module.exports = {
     var regex = this.getMarkupRegex(markup);
     var {id: idPos, type: typePos, display: displayPos} = this.getCapturingGroupPositions(markup);
 
-    return value.replace(regex, function() {
-      // first argument is the whole match, capturing groups are following
+    return value.replace(regex, function(matched, mention) {
+      // first argument is the whole match, second is the whole mention, capturing groups are following
       var id = arguments[idPos];
       var display = arguments[displayPos];
       var type = arguments[typePos];
 
       if (displayTransform) display = displayTransform(id, display, type);
 
-      // console.log('mentions.plaintext', value, arguments[displayPos+1], display, {
-      //   markup, displayTransform, regex, idPos, displayPos, typePos, id, display, type,
-      //   display0: arguments[displayPos+1]
-      // });
+      // console.log('mentions.plaintext', {value, markup, regex, matched, mention, replace: matched.replace(mention, display),
+      //   typePos, type, idPos, id, displayPos, display0: arguments[displayPos], display, displayTransform});
 
-      return display;
+      return matched.replace(mention, display);
     });
   },
 
