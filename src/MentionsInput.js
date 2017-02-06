@@ -565,7 +565,7 @@ const MentionsInput = React.createClass({
 
       if(match) {
         var querySequenceStart = substring.indexOf(match[1], match.index);
-        that.queryData(match[2], child, querySequenceStart, querySequenceStart+match[1].length, plainTextValue);
+        that.queryData(match[2] || '', child, querySequenceStart, querySequenceStart + match[1].length, plainTextValue);
       }
     });
   },
