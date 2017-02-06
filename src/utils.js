@@ -58,7 +58,7 @@ module.exports = {
 
   // cache provided regex, or get previously cached regex, or build and cache regex from provided markup
   useMarkupRegex: function(markup, regex, cache=MARKUP_REGEX_CACHE) {
-    // if (regex) console.log('mentions.regex', markup, regex, cache[markup]);
+    // if (regex) console.log('mentions.regex', {markup, regex, cached: cache[markup]});
     return cache[markup] = regex ?
       regex.global ? regex : RegExp(regex, regex.flags + 'g') :
       cache[markup] || this.markupToRegex(markup);
@@ -197,6 +197,9 @@ module.exports = {
 
     this.iterateMentionsMarkup(value, markup, textIteratee, markupIteratee, displayTransform);
 
+    // console.log('mention.plaintext.index', indexInPlainText, inMarkupCorrection, result,
+    //   {value, markup, indexInPlainText, inMarkupCorrection, result, displayTransform});
+
     // when a mention is at the end of the value and we want to get the caret position
     // at the end of the string, result is undefined
     return result === undefined ? value.length : result;
@@ -333,6 +336,7 @@ module.exports = {
         plainTextIndex: plainTextIndex
       });
     });
+    // console.log('mentions.get', {value, markup, mentions});
     return mentions;
   },
 

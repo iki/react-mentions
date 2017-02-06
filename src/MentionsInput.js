@@ -560,8 +560,9 @@ const MentionsInput = React.createClass({
       var regex = _getTriggerRegex(child.props.trigger);
       var match = substring.match(regex);
 
-      // console.log('mentions.suggestions.match', that._queryId, substring, child.props.trigger, regex,
-      //   match && [match, substring.indexOf(match[1], match.index),  match[1].length]);
+      // console.log('mentions.suggestions.match', that._queryId,
+      //   [match && match[1] && substring.indexOf(match[1], match.index), caretPosition], match,
+      //   {value, plainTextValue, caretPosition, substring, trigger: child.props.trigger, regex});
 
       if(match) {
         var querySequenceStart = substring.indexOf(match[1], match.index);
