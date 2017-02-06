@@ -59,7 +59,9 @@ module.exports = {
   // cache provided regex, or get previously cached regex, or build and cache regex from provided markup
   useMarkupRegex: function(markup, regex, cache=MARKUP_REGEX_CACHE) {
     // if (regex) console.log('mentions.regex', markup, regex, cache[markup]);
-    return cache[markup] = regex || cache[markup] || this.markupToRegex(markup);
+    return cache[markup] = regex ?
+      regex.global ? regex : RegExp(regex, regex.flags + 'g') :
+      cache[markup] || this.markupToRegex(markup);
   },
 
   // get previously cached regex, or build and cache regex from provided markup
