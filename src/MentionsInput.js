@@ -5,7 +5,7 @@ import Radium from './OptionalRadium';
 import keys from 'lodash/keys';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
-// import clone from 'lodash/clone';
+import clone from 'lodash/clone';
 
 import defaultStyle from 'substyle';
 
@@ -163,7 +163,7 @@ const MentionsInput = React.createClass({
     let inputProps = this.getInputProps(!singleLine);
     let controlProps = substyle(this.props, getModifiers(this.props, "control"));
 
-    // console.log('mentions.render.input', inputProps.name, inputProps.value, {singleLine, inputProps, controlProps: {...controlProps}, props: this.props});
+    console.log('mentions.render.input', inputProps.name, inputProps.value, {singleLine, inputProps, controlProps: {...controlProps}, props: this.props});
     return (
       <div { ...controlProps }>
         { this.renderHighlighter(inputProps.style) }
@@ -248,6 +248,7 @@ const MentionsInput = React.createClass({
   // Returns the text to set as the value of the textarea with all markups removed
   getPlainText: function() {
     return utils.getPlainText(
+      // use cached value to avoid rerender with old value on local state update
       this.state.value || this.props.value || "",
       this.props.markup,
       this.props.displayTransform
@@ -272,7 +273,8 @@ const MentionsInput = React.createClass({
       return;
     }
 
-    var value = this.props.value || "";
+    // use cached value to avoid rerender with old value on local state update
+    var value = this.state.value || this.props.value || "";
     var newPlainTextValue = ev.target.value;
 
     // Derive the new value to set by applying the local change in the textarea's plain text
@@ -305,18 +307,19 @@ const MentionsInput = React.createClass({
       }
     }
 
-    // console.log('mentions.change', [value, newValue],
-    //   [utils.getPlainText(value, this.props.markup, this.props.displayTransform), ev.target.value, newPlainTextValue],
-    //   [this.state.selectionStart, this.state.selectionEnd, this.state.setSelectionAfterMentionChange],
-    //   [ev.target.selectionStart, ev.target.selectionEnd],
-    //   [startOfMention, startOfMention !== undefined && this.state.selectionEnd > startOfMention],
-    //   [selectionStart, selectionEnd, setSelectionAfterMentionChange],
-    //   {
-    //     state: clone(this.state),
-    //     props: this.props,
-    //   });
+    console.log('mentions.change', [value, newValue],
+      [utils.getPlainText(value, this.props.markup, this.props.displayTransform), ev.target.value, newPlainTextValue],
+      [this.state.selectionStart, this.state.selectionEnd, this.state.setSelectionAfterMentionChange],
+      [ev.target.selectionStart, ev.target.selectionEnd],
+      [startOfMention, startOfMention !== undefined && this.state.selectionEnd > startOfMention],
+      [selectionStart, selectionEnd, setSelectionAfterMentionChange],
+      {
+        state: clone(this.state),
+        props: this.props,
+      });
 
     this.setState({
+      // cache value to avoid rerender with old value on local state update
       value: newValue,
       selectionStart,
       selectionEnd,
@@ -427,6 +430,8 @@ const MentionsInput = React.createClass({
     // other than the suggestions overlay
     if(!clickedSuggestion) {
       this.setState({
+        // clear the cached value on blur to render the passed property next time
+        value: null,
         selectionStart: null,
         selectionEnd: null
       });
