@@ -44,7 +44,7 @@ var _getDataProvider = function(data) {
   }
 };
 
-var KEY = { TAB : 9, RETURN : 13, ESC : 27, UP : 38, DOWN : 40 };
+var KEY = { TAB: 9, RETURN: 13, ESC: 27, UP: 38, DOWN: 40, BACKSPACE: 8 };
 
 var DEFAULT_PROPS = {
   markup: '@[__display__](__id__)',
@@ -59,6 +59,9 @@ var DEFAULT_PROPS = {
   onSelect: () => null,
   onBlur: () => null,
   style: {},
+  useInsertTextQueryCommand: // use the browser insertText query command to get working undo/redo
+    typeof InstallTrigger === 'undefined' && // when not running on Firefox, which already has working undo/redo on value change,
+    document.queryCommandSupported('insertText'), // and when the command is supported (Chrome, Safari, Opera, IE9+)
 };
 
 var isComposing = false;
@@ -85,6 +88,7 @@ const MentionsInput = React.createClass({
     treatMentionAsUnit: PropTypes.bool,
     highlightMentions: PropTypes.bool,
     reuseInputStyleForHighlighter: PropTypes.bool,
+    useInsertTextQueryCommand: PropTypes.bool,
 
     markup: PropTypes.string,
     markupRegex: PropTypes.instanceOf(RegExp),
@@ -640,7 +644,7 @@ const MentionsInput = React.createClass({
 
   addMention: function(suggestion, {mentionDescriptor, querySequenceStart, querySequenceEnd, plainTextValue}) {
     // Insert mention in the marked up value at the correct position
-    var value = this.props.value || "";
+    var value = this.state.value || this.props.value || "";
     var start = utils.mapPlainTextIndex(value, this.props.markup, querySequenceStart, 'START', this.props.displayTransform);
     var end = start + querySequenceEnd - querySequenceStart;
     var insert = utils.makeMentionsMarkup(this.props.markup, suggestion.id, suggestion.display, mentionDescriptor.props.type);
@@ -652,32 +656,42 @@ const MentionsInput = React.createClass({
     // Refocus input and set caret position to end of mention
     this.refs.input.focus();
 
-    var displayValue = this.props.displayTransform(suggestion.id, suggestion.display, mentionDescriptor.props.type);
-    if (mentionDescriptor.props.appendSpaceOnAdd) {
-      displayValue = displayValue + ' '
+    // console.log('mentions.add', value, start, end, insert, this.props.useInsertTextQueryCommand, {
+    //   value, newValue, start, end, insert, suggestion, querySequenceStart, querySequenceEnd, plainTextValue, props: this.props})
+
+    if (this.props.useInsertTextQueryCommand) {
+      this.refs.input.setSelectionRange(querySequenceStart, querySequenceEnd)
+      document.execCommand('insertText', false, insert)
+
+    } else {
+      var displayValue = this.props.displayTransform(suggestion.id, suggestion.display, mentionDescriptor.props.type);
+      if (mentionDescriptor.props.appendSpaceOnAdd) {
+        displayValue = displayValue + ' '
+      }
+      var newCaretPosition = querySequenceStart + displayValue.length;
+
+      this.setState({
+        value: newValue,
+        selectionStart: newCaretPosition,
+        selectionEnd: newCaretPosition,
+        setSelectionAfterMentionChange: true
+      });
+
+      // Propagate change
+      var eventMock = { target: { value: newValue }};
+      var mentions = utils.getMentions(newValue, this.props.markup);
+      var newPlainTextValue = utils.spliceString(plainTextValue, querySequenceStart, querySequenceEnd, displayValue);
+
+      this.executeOnChange(eventMock, newValue, newPlainTextValue, mentions);
+
+      // Make sure the suggestions overlay is closed
+      this.clearSuggestions();
     }
-    var newCaretPosition = querySequenceStart + displayValue.length;
-    this.setState({
-      value: newValue,
-      selectionStart: newCaretPosition,
-      selectionEnd: newCaretPosition,
-      setSelectionAfterMentionChange: true
-    });
-
-    // Propagate change
-    var eventMock = { target: { value: newValue }};
-    var mentions = utils.getMentions(newValue, this.props.markup);
-    var newPlainTextValue = utils.spliceString(plainTextValue, querySequenceStart, querySequenceEnd, displayValue);
-
-    this.executeOnChange(eventMock, newValue, newPlainTextValue, mentions);
 
     var onAdd = mentionDescriptor.props.onAdd;
     if(onAdd) {
       onAdd(suggestion.id, suggestion.display);
     }
-
-    // Make sure the suggestions overlay is closed
-    this.clearSuggestions();
   },
 
   isLoading: function() {
