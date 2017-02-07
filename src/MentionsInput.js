@@ -5,7 +5,7 @@ import Radium from './OptionalRadium';
 import keys from 'lodash/keys';
 import omit from 'lodash/omit';
 import isEqual from 'lodash/isEqual';
-// import clone from 'lodash/clone';
+import clone from 'lodash/clone';
 
 import defaultStyle from 'substyle';
 
@@ -248,6 +248,7 @@ const MentionsInput = React.createClass({
   // Returns the text to set as the value of the textarea with all markups removed
   getPlainText: function() {
     return utils.getPlainText(
+      // use cached value to avoid rerender with old value on local state update
       this.state.value || this.props.value || "",
       this.props.markup,
       this.props.displayTransform
@@ -272,7 +273,8 @@ const MentionsInput = React.createClass({
       return;
     }
 
-    var value = this.props.value || "";
+    // use cached value to avoid rerender with old value on local state update
+    var value = this.state.value || this.props.value || "";
     var newPlainTextValue = ev.target.value;
 
     // Derive the new value to set by applying the local change in the textarea's plain text
@@ -317,6 +319,7 @@ const MentionsInput = React.createClass({
     //   });
 
     this.setState({
+      // cache value to avoid rerender with old value on local state update
       value: newValue,
       selectionStart,
       selectionEnd,
@@ -427,6 +430,8 @@ const MentionsInput = React.createClass({
     // other than the suggestions overlay
     if(!clickedSuggestion) {
       this.setState({
+        // clear the cached value on blur to render the passed property next time
+        value: null,
         selectionStart: null,
         selectionEnd: null
       });
