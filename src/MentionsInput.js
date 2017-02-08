@@ -656,27 +656,29 @@ const MentionsInput = React.createClass({
     // Refocus input and set caret position to end of mention
     this.refs.input.focus();
 
+    var displayValue = this.props.displayTransform(suggestion.id, suggestion.display, mentionDescriptor.props.type);
+    if (mentionDescriptor.props.appendSpaceOnAdd) {
+      displayValue = displayValue + ' '
+    }
+    var newCaretPosition = querySequenceStart + displayValue.length;
+
     // console.log('mentions.add', value, start, end, insert, this.props.useInsertTextQueryCommand, {
-    //   value, newValue, start, end, insert, suggestion, querySequenceStart, querySequenceEnd, plainTextValue, props: this.props})
+    //   value, newValue, insert, plainTextValue, displayValue, suggestion,
+    //   start, end, querySequenceStart, querySequenceEnd, newCaretPosition, props: this.props})
 
     if (this.props.useInsertTextQueryCommand) {
       this.refs.input.setSelectionRange(querySequenceStart, querySequenceEnd)
       document.execCommand('insertText', false, insert)
+    }
 
-    } else {
-      var displayValue = this.props.displayTransform(suggestion.id, suggestion.display, mentionDescriptor.props.type);
-      if (mentionDescriptor.props.appendSpaceOnAdd) {
-        displayValue = displayValue + ' '
-      }
-      var newCaretPosition = querySequenceStart + displayValue.length;
+    this.setState({
+      value: newValue,
+      selectionStart: newCaretPosition,
+      selectionEnd: newCaretPosition,
+      setSelectionAfterMentionChange: true
+    });
 
-      this.setState({
-        value: newValue,
-        selectionStart: newCaretPosition,
-        selectionEnd: newCaretPosition,
-        setSelectionAfterMentionChange: true
-      });
-
+    if (!this.props.useInsertTextQueryCommand) {
       // Propagate change
       var eventMock = { target: { value: newValue }};
       var mentions = utils.getMentions(newValue, this.props.markup);
