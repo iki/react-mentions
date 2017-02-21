@@ -128,6 +128,13 @@ const MentionsInput = React.createClass({
     };
   },
 
+  getCurrentValue: function () {
+    // If parent component passes an old value in property due to async state update,
+    // then use a local state value instead, if available.
+    const value = this.props.value;
+    return (value === this.state.lastPropValue) && this.state.value || value || "";
+  },
+
   render: function() {
     if (this.props.markupRegex) utils.useMarkupRegex(this.props.markup, this.props.markupRegex);
     return (
@@ -240,8 +247,11 @@ const MentionsInput = React.createClass({
           start: selectionStart,
           end: selectionEnd
         }}
-        onCaretPositionChange={ (position) => this.setState({ caretPosition: position }) }>
-
+        onCaretPositionChange={
+          (position) => this.setState({
+            caretPosition: position
+          })
+        }>
         { children }
       </Highlighter>
     ) : (
@@ -251,12 +261,8 @@ const MentionsInput = React.createClass({
 
   // Returns the text to set as the value of the textarea with all markups removed
   getPlainText: function() {
-    return utils.getPlainText(
-      // use cached value to avoid rerender with old value on local state update
-      this.state.value || this.props.value || "",
-      this.props.markup,
-      this.props.displayTransform
-    );
+    var value = this.getCurrentValue();
+    return utils.getPlainText(value, this.props.markup, this.props.displayTransform);
   },
 
   executeOnChange: function(event, ...args) {
@@ -277,8 +283,7 @@ const MentionsInput = React.createClass({
       return;
     }
 
-    // use cached value to avoid rerender with old value on local state update
-    var value = this.state.value || this.props.value || "";
+    var value = this.getCurrentValue();
     var newPlainTextValue = ev.target.value;
 
     // Derive the new value to set by applying the local change in the textarea's plain text
@@ -325,6 +330,7 @@ const MentionsInput = React.createClass({
     this.setState({
       // cache value to avoid rerender with old value on local state update
       value: newValue,
+      lastPropValue: this.props.value,
       selectionStart,
       selectionEnd,
       setSelectionAfterMentionChange,
@@ -434,8 +440,6 @@ const MentionsInput = React.createClass({
     // other than the suggestions overlay
     if(!clickedSuggestion) {
       this.setState({
-        // clear the cached value on blur to render the passed property next time
-        value: null,
         selectionStart: null,
         selectionEnd: null
       });
@@ -644,7 +648,7 @@ const MentionsInput = React.createClass({
 
   addMention: function(suggestion, {mentionDescriptor, querySequenceStart, querySequenceEnd, plainTextValue}) {
     // Insert mention in the marked up value at the correct position
-    var value = this.state.value || this.props.value || "";
+    var value = this.getCurrentValue();
     var start = utils.mapPlainTextIndex(value, this.props.markup, querySequenceStart, 'START', this.props.displayTransform);
     var end = start + querySequenceEnd - querySequenceStart;
     var insert = utils.makeMentionsMarkup(this.props.markup, suggestion.id, suggestion.display, mentionDescriptor.props.type);
@@ -673,6 +677,7 @@ const MentionsInput = React.createClass({
 
     this.setState({
       value: newValue,
+      lastPropValue: this.props.value,
       selectionStart: newCaretPosition,
       selectionEnd: newCaretPosition,
       setSelectionAfterMentionChange: true
