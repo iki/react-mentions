@@ -23,24 +23,31 @@ class SuggestionsOverlay extends Component {
   };
 
   componentDidUpdate() {
-    const { suggestions } = this.refs
-    if (!suggestions || suggestions.offsetHeight >= suggestions.scrollHeight || !this.props.scrollFocusedIntoView) {
-      return
+    const { suggestions } = this.refs;
+    const focused = suggestions && suggestions.children[this.props.focusIndex];
+    const container = suggestions && suggestions.offsetParent;
+
+    if (!container || !focused || !this.props.scrollFocusedIntoView) {
+      // console.log('mentions.overlay.update.skip', container && [container.scrollTop, container.offsetHeight, container.scrollHeight],
+      //   {...this.props, focused, container, suggestions})
+      return;
     }
 
-    const scrollTop = suggestions.scrollTop
-    let { top, bottom } = suggestions.children[this.props.focusIndex].getBoundingClientRect();
-    const { top: topContainer } = suggestions.getBoundingClientRect();
-    top = top - topContainer + scrollTop;
-    bottom = bottom - topContainer + scrollTop;
-    
-    if(top < scrollTop) {
-      suggestions.scrollTop = top
-    } else if(bottom > suggestions.offsetHeight) {
-      suggestions.scrollTop = bottom - suggestions.offsetHeight
+    const { scrollTop, offsetHeight } = container;
+    const rectFocused = focused.getBoundingClientRect();
+    const rectContainer = container.getBoundingClientRect();
+    const overscan = rectFocused.height * 0.618;
+    const scrollTopMax = scrollTop + rectFocused.top - rectContainer.top - overscan;
+    const scrollTopMin = scrollTop + rectFocused.bottom - rectContainer.top - offsetHeight + overscan;
+
+    if (scrollTop < scrollTopMin) {
+      container.scrollTop = scrollTopMin;
+    } else if (scrollTop > scrollTopMax) {
+      container.scrollTop = scrollTopMax;
     }
 
-    // console.log('mentions.overlay.update', suggestions.children[this.props.focusIndex].getBoundingClientRect(), {top, bottom, topContainer, scrollTop}, suggestions)
+    // console.log('mentions.overlay.update', {rectFocused, rectContainer, scrollTop, offsetHeight, scrollTopMin, scrollTopMax,
+    //   scrollTopNew: container.scrollTop, focused, container, suggestions})
   }
 
   render() {
