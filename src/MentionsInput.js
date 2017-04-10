@@ -44,8 +44,6 @@ var _getDataProvider = function(data) {
   }
 };
 
-var KEY = { TAB: 9, RETURN: 13, ESC: 27, UP: 38, DOWN: 40, BACKSPACE: 8 };
-
 var DEFAULT_PROPS = {
   markup: '@[__display__](__id__)',
   singleLine: false,
@@ -64,6 +62,8 @@ var DEFAULT_PROPS = {
     document.queryCommandSupported && document.queryCommandSupported('insertText'), // and when the command is supported (Chrome, Safari, Opera, IE9+)
 };
 
+var KEY = { BACKSPACE: 8, TAB: 9, RETURN: 13, ESC: 27, PGUP: 33, PGDN: 34, END: 35, HOME: 36, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40 };
+
 var isComposing = false;
 
 const MentionsInput = React.createClass({
@@ -72,8 +72,14 @@ const MentionsInput = React.createClass({
 
   keyHandlers: {
     [KEY.ESC]: c => c.clearSuggestions(),
-    [KEY.DOWN]: c => c.shiftFocus(+1),
-    [KEY.UP]: c => c.shiftFocus(-1),
+    [KEY.UP]: c => c.shiftFocusDelta(-1),
+    [KEY.DOWN]: c => c.shiftFocusDelta(+1),
+    [KEY.PGUP]: c => c.shiftFocusDelta(-10),
+    [KEY.PGDN]: c => c.shiftFocusDelta(+10),
+    [KEY.LEFT]: c => c.shiftFocus(0),
+    [KEY.RIGHT]: c => c.shiftFocus(-1),
+    [KEY.HOME]: c => c.shiftFocus(0),
+    [KEY.END]: c => c.shiftFocus(-1),
     [KEY.RETURN]: c => c.selectFocused(),
     [KEY.TAB]: c => c.selectFocused(),
   },
@@ -404,11 +410,21 @@ const MentionsInput = React.createClass({
     this.props.onKeyDown(ev);
   },
 
-  shiftFocus: function(delta) {
-    let suggestionsCount = utils.countSuggestions(this.state.suggestions);
+  shiftFocusDelta: function(delta) {
+    const suggestionsCount = utils.countSuggestions(this.state.suggestions);
+    const index = this.state.focusIndex + delta;
+    this.setFocus(Math.max(0, Math.min(index, suggestionsCount - 1)));
+  },
 
+  shiftFocus: function(index) {
+    const suggestionsCount = utils.countSuggestions(this.state.suggestions);
+    if (index < 0) index += suggestionsCount;
+    this.setFocus(Math.max(0, Math.min(index, suggestionsCount - 1)));
+  },
+
+  setFocus: function(index) {
     this.setState({
-      focusIndex: (suggestionsCount + this.state.focusIndex + delta) % suggestionsCount,
+      focusIndex: index,
       scrollFocusedIntoView: true
     });
   },
