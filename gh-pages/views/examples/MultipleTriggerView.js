@@ -53,11 +53,11 @@ module.exports = React.createClass({
   },
 
   handleRemove: function() {
-    console.log("removed a mention", arguments);
+    // console.log("removed a mention", arguments);
   },
 
   handleAdd: function() {
-    console.log("added a new mention", arguments);
+    // console.log("added a new mention", arguments);
   },
 
   renderSuggestion: function(suggestion, search, highlightedDisplay) {

@@ -54,12 +54,12 @@ module.exports = React.createClass({
   },
 
   handleAddMention: function (id, display) {
-    console.log("Added mention of " + id);
+    // console.log("Added mention of " + id);
   },
 
   handleBlur: function(ev, clickedOnSuggestion) {
     if(!clickedOnSuggestion) {
-      console.log("finished editing");
+      // console.log("finished editing");
     }
   }
 
