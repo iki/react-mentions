@@ -4,6 +4,7 @@
   "description": "React mentions input",
   "main": "lib/index.js",
   "scripts": {
+    "dev": "babel -w src --out-dir lib",
     "test": "npm run env NODE_ENV=test && mocha",
     "transpile": "npm run env NODE_ENV=production && babel src --out-dir lib",
     "clean": "rimraf lib",
