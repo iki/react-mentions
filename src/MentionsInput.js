@@ -61,7 +61,7 @@ var DEFAULT_PROPS = {
   style: {},
   useInsertTextQueryCommand: // use the browser insertText query command to get working undo/redo
     typeof InstallTrigger === 'undefined' && // when not running on Firefox, which already has working undo/redo on value change,
-    document.queryCommandSupported('insertText'), // and when the command is supported (Chrome, Safari, Opera, IE9+)
+    document.queryCommandSupported && document.queryCommandSupported('insertText'), // and when the command is supported (Chrome, Safari, Opera, IE9+)
 };
 
 var isComposing = false;
