@@ -81,9 +81,9 @@ class Suggestion extends Component {
     return (
       <span { ...substyle(this.props, "display") }>
         { display.substring(0, i) }
-        <b { ...substyle(this.props, "highlight") }>
+        <span { ...substyle(this.props, "highlight") }>
           { display.substring(i, i+query.length) }
-        </b>
+        </span>
         { display.substring(i+query.length) }
       </span>
     );
@@ -95,6 +95,9 @@ export default Radium(Suggestion);
 
 const substyle = defaultStyle({
   style: {
-    cursor: "pointer"
+    cursor: "pointer",
+    highlight: {
+      fontWeight: 'bold'
+    }
   }
 })
