@@ -47,7 +47,8 @@ class Suggestion extends Component {
     }
 
     if(descriptor.props.renderSuggestion) {
-      return descriptor.props.renderSuggestion(suggestion, query, display, index, focused);
+      const renderHighlighted = text => this.renderHighlightedDisplay(text, query);
+      return descriptor.props.renderSuggestion(suggestion, query, display, index, focused, renderHighlighted);
     }
 
     return display;
