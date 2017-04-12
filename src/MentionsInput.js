@@ -476,6 +476,7 @@ const MentionsInput = React.createClass({
     let { caretPosition } = this.state;
 
     if(!caretPosition || !this.refs.suggestions) {
+      // console.log('metions.suggestions.position.update.skip', caretPosition, {suggestionsRef: this.refs.suggestions})
       return;
     }
 
@@ -485,6 +486,7 @@ const MentionsInput = React.createClass({
     let highlighter = ReactDOM.findDOMNode(this.refs.highlighter);
 
     if(!suggestions) {
+      // console.log('metions.suggestions.position.update.skip', caretPosition, {suggestions, container, highlighter})
       return;
     }
 
@@ -503,6 +505,8 @@ const MentionsInput = React.createClass({
     if(isEqual(position, this.state.suggestionsPosition)) {
       return;
     }
+
+    // console.log('metions.suggestions.position.update', position, caretPosition, {suggestions, container, highligther})
 
     this.setState({
       suggestionsPosition: position

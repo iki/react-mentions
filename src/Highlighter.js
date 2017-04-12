@@ -55,6 +55,7 @@ class Highlighter extends Component {
     let { caret } = this.refs;
 
     if(!caret) {
+      // console.log('mentions.caret.notify.skip', caret)
       return;
     }
 
@@ -66,12 +67,15 @@ class Highlighter extends Component {
     let { lastPosition } = this.state;
 
     if(isEqual(lastPosition, position)) {
+      // console.log('mentions.caret.notify.skip', position, lastPosition)
       return;
     }
 
     this.setState({
       lastPosition: position
     });
+
+    // console.log('mentions.caret.notify', position, lastPosition)
 
     this.props.onCaretPositionChange(position);
   }
