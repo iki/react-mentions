@@ -50,6 +50,7 @@ var DEFAULT_PROPS = {
   treatMentionAsUnit: true,
   highlightMentions: true,
   reuseInputStyleForHighlighter: true,
+  getDynamicSuggestionsOverlayStyle: () => null,
   displayTransform: function(id, display, type) {
     return display;
   },
@@ -100,6 +101,7 @@ const MentionsInput = React.createClass({
     markupRegex: PropTypes.instanceOf(RegExp),
     value: PropTypes.string,
 
+    getDynamicSuggestionsOverlayStyle: PropTypes.func,
     displayTransform: PropTypes.func,
     onKeyDown: PropTypes.func,
     onSelect: PropTypes.func,
@@ -213,25 +215,32 @@ const MentionsInput = React.createClass({
       return null;
     }
 
+    const { suggestions, suggestionsPosition, focusIndex, scrollFocusedIntoView } = this.state;
     let { className, style } = substyle(this.props, getModifiers(this.props, "suggestions"));
+
+    // console.log('mentions.suggestions.overlay', {className, style, suggestionsPosition, suggestions, focusIndex, scrollFocusedIntoView,
+    //   dynamicStyle: this.props.getDynamicSuggestionsOverlayStyle(this.refs.input, style, suggestionsPosition)})
+
+    style = {
+      ...suggestionsPosition,
+      ...style,
+      ...this.props.getDynamicSuggestionsOverlayStyle(this.refs.input, style, suggestionsPosition)
+    }
 
     return (
       <SuggestionsOverlay
-        className={ className }
-        style={{
-          ...style,
-          ...this.state.suggestionsPosition
-        }}
-        focusIndex={ this.state.focusIndex }
-        scrollFocusedIntoView={ this.state.scrollFocusedIntoView }
+        className={className}
+        style={style}
+        focusIndex={focusIndex}
+        scrollFocusedIntoView={scrollFocusedIntoView}
         ref="suggestions"
-        suggestions={this.state.suggestions}
+        suggestions={suggestions}
         onSelect={this.addMention}
         onMouseDown={this.handleSuggestionsMouseDown}
-        onMouseEnter={ (focusIndex) => this.setState({
+        onMouseEnter={(focusIndex) => this.setState({
           focusIndex,
           scrollFocusedIntoView: false
-        }) }
+        })}
         isLoading={this.isLoading()} />
     );
   },
