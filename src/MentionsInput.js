@@ -357,7 +357,7 @@ const MentionsInput = React.createClass({
     // var handleChange = this.getOnChange(this.props) || emptyFunction;
     var eventMock = { target: { value: newValue } };
     // this.props.onChange.call(this, eventMock, newValue, newPlainTextValue, mentions);
-    this.executeOnChange(eventMock, newValue, newPlainTextValue, mentions);
+    this.executeOnChange(eventMock, {newValue, newPlainTextValue, mentions, input: this.refs.input});
   },
 
   // Handle input element's select event
@@ -718,7 +718,7 @@ const MentionsInput = React.createClass({
       var mentions = utils.getMentions(newValue, this.props.markup);
       var newPlainTextValue = utils.spliceString(plainTextValue, querySequenceStart, querySequenceEnd, displayValue);
 
-      this.executeOnChange(eventMock, newValue, newPlainTextValue, mentions);
+      this.executeOnChange(eventMock, {newValue, newPlainTextValue, mentions, input: this.refs.input});
 
       // Make sure the suggestions overlay is closed
       this.clearSuggestions();
