@@ -50,7 +50,6 @@ var DEFAULT_PROPS = {
   treatMentionAsUnit: true,
   highlightMentions: true,
   reuseInputStyleForHighlighter: true,
-  getDynamicSuggestionsOverlayStyle: () => null,
   displayTransform: function(id, display, type) {
     return display;
   },
@@ -101,7 +100,6 @@ const MentionsInput = React.createClass({
     markupRegex: PropTypes.instanceOf(RegExp),
     value: PropTypes.string,
 
-    getDynamicSuggestionsOverlayStyle: PropTypes.func,
     displayTransform: PropTypes.func,
     onKeyDown: PropTypes.func,
     onSelect: PropTypes.func,
@@ -218,13 +216,11 @@ const MentionsInput = React.createClass({
     const { suggestions, suggestionsPosition, focusIndex, scrollFocusedIntoView } = this.state;
     let { className, style } = substyle(this.props, getModifiers(this.props, "suggestions"));
 
-    // console.log('mentions.suggestions.overlay', {className, style, suggestionsPosition, suggestions, focusIndex, scrollFocusedIntoView,
-    //   dynamicStyle: this.props.getDynamicSuggestionsOverlayStyle(this.refs.input, style, suggestionsPosition)})
+    // console.log('mentions.suggestions.overlay', {className, style, suggestionsPosition, suggestions, focusIndex, scrollFocusedIntoView})
 
     style = {
       ...suggestionsPosition,
       ...style,
-      ...this.props.getDynamicSuggestionsOverlayStyle(this.refs.input, style, suggestionsPosition)
     }
 
     return (
