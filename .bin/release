@@ -1,0 +1,43 @@
+#!/bin/bash
+
+[ -n "$1" ] || { echo "Usage: ${0##*[\\/]} <patch-version>" >&2; exit 2; }
+
+set -e
+
+baseVersion="`sed -n '/^\s*"version":/s/.*:\s*"\(.*\)".*/\1/p' package.json`"
+
+[ "$1" != "?" ] || { git tag -l -n1 "v$baseVersion-iki-*"; exit $?; }
+
+version="$baseVersion-iki-$1"
+
+echo === Release $version
+
+git branch -f release
+git checkout release
+
+git status
+git log -1 --oneline
+
+sed -i "/^\s*\"version\":/s/$baseVersion/$version/" package.json
+
+git diff
+
+rm -r lib
+npm run transpile
+
+mkdir .bin
+cp "$0" "$0.bat" .bin
+
+git add -f package.json lib .bin
+
+git status
+
+git commit -m "release: $version"
+git push -f
+
+git tag "v$version"
+git tag -l -n1 "v$baseVersion*"
+
+git push --tags
+
+git checkout develop
