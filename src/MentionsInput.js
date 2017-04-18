@@ -135,10 +135,12 @@ const MentionsInput = React.createClass({
   },
 
   getCurrentValue: function () {
-    // If parent component passes an old value in property due to async state update,
+    // If parent component passes an old non-empty value in property due to async state update,
     // then use a local state value instead, if available.
     const value = this.props.value;
-    return (value === this.state.lastPropValue) && this.state.value || value || "";
+    const usedValue = (value && value === this.state.lastPropValue ? this.state.value : value) || '';
+    // console.log('mentions.value', {usedValue, value, stateValue: this.state.value, lastValue: this.state.lastPropValue});
+    return usedValue;
   },
 
   render: function() {
